@@ -1,11 +1,11 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, Repository } from 'typeorm'
 
-import Transaction from '../models/Transaction';
+import Transaction from '../models/Transaction'
 
 interface Balance {
-  income: number;
-  outcome: number;
-  total: number;
+  income: number
+  outcome: number
+  total: number
 }
 
 @EntityRepository(Transaction)
@@ -15,4 +15,4 @@ class TransactionsRepository extends Repository<Transaction> {
   }
 }
 
-export default TransactionsRepository;
+export default TransactionsRepository

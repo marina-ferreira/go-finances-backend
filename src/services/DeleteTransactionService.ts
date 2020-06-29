@@ -6,4 +6,4 @@ class DeleteTransactionService {
   }
 }
 
-export default DeleteTransactionService;
+export default DeleteTransactionService

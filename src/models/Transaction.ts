@@ -1,17 +1,17 @@
 class Transaction {
-  id: string;
+  id: string
 
-  title: string;
+  title: string
 
-  type: 'income' | 'outcome';
+  type: 'income' | 'outcome'
 
-  value: number;
+  value: number
 
-  category_id: string;
+  category_id: string
 
-  created_at: Date;
+  created_at: Date
 
-  updated_at: Date;
+  updated_at: Date
 }
 
-export default Transaction;
+export default Transaction

@@ -1,4 +1,4 @@
-import Transaction from '../models/Transaction';
+import Transaction from '../models/Transaction'
 
 class ImportTransactionsService {
   async execute(): Promise<Transaction[]> {
@@ -6,4 +6,4 @@ class ImportTransactionsService {
   }
 }
 
-export default ImportTransactionsService;
+export default ImportTransactionsService
