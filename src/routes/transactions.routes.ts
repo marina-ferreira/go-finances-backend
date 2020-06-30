@@ -29,7 +29,18 @@ transactionsRouter.post('/', async (request, response) => {
 })
 
 transactionsRouter.delete('/:id', async (request, response) => {
-  // TODO
+  const { id } = request.params
+  const transactionsRepository = getCustomRepository(TransactionsRepository)
+  const transaction = await transactionsRepository.findOne(id)
+
+  if (!transaction) {
+    const errorMessage = { message: 'Transaction not found' }
+    return response.status(400).json(errorMessage)
+  }
+
+  await transactionsRepository.remove(transaction)
+
+  return response.status(204).send()
 })
 
 transactionsRouter.post('/import', async (request, response) => {
