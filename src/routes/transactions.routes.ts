@@ -3,6 +3,7 @@ import { Router } from 'express'
 import { getCustomRepository } from 'typeorm'
 
 import uploadConfig from '../config/upload'
+import AppError from '../errors/AppError'
 
 import TransactionsRepository from '../repositories/TransactionsRepository'
 import CreateTransactionService from '../services/CreateTransactionService'
@@ -45,6 +46,8 @@ transactionsRouter.post(
   '/import',
   upload.single('file'),
   async (request, response) => {
+    if (!request.file) throw new AppError('Missing csv file', 422)
+
     const { filename } = request.file
     const importTransactionsService = new ImportTransactionsService()
     const transactions = await importTransactionsService.execute(filename)

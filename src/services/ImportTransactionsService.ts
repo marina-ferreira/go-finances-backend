@@ -7,6 +7,7 @@ import CategoriesRepository from '../repositories/CategoriesRepository'
 import TransactionsRepository from '../repositories/TransactionsRepository'
 import Transaction from '../models/Transaction'
 import Category from '../models/Category'
+import AppError from '../errors/AppError'
 
 interface TransactionData {
   title: string
@@ -56,7 +57,7 @@ class ImportTransactionsService {
     transactions: TransactionData[]
   ): Promise<Transaction[]> {
     const categoryTitles = this.getCategoryTitles(transactions)
-    const categories = await this.categoriesRepository.findByTitle(
+    const categories = await this.categoriesRepository.findByTitles(
       categoryTitles
     )
 
@@ -80,6 +81,8 @@ class ImportTransactionsService {
     transaction,
     categories
   }: TransactionBuilder): TransactionData {
+    this.validateTransaction(transaction)
+
     const { categoryTitle } = transaction
     const category =
       categories.find(
@@ -87,6 +90,11 @@ class ImportTransactionsService {
       ) || categoryTitle
 
     return { ...transaction, category }
+  }
+
+  private validateTransaction(transaction: TransactionData): void {
+    const isValid = Object.keys(transaction).every(key => transaction[key])
+    if (!isValid) throw new AppError('Missing transaction data', 422)
   }
 }
 
