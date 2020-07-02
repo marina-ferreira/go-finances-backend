@@ -6,7 +6,7 @@ import uploadConfig from '../config/upload'
 
 import TransactionsRepository from '../repositories/TransactionsRepository'
 import CreateTransactionService from '../services/CreateTransactionService'
-// import DeleteTransactionService from '../services/DeleteTransactionService';
+import DeleteTransactionService from '../services/DeleteTransactionService'
 import ImportTransactionsService from '../services/ImportTransactionsService'
 
 const transactionsRouter = Router()
@@ -34,15 +34,9 @@ transactionsRouter.post('/', async (request, response) => {
 
 transactionsRouter.delete('/:id', async (request, response) => {
   const { id } = request.params
-  const transactionsRepository = getCustomRepository(TransactionsRepository)
-  const transaction = await transactionsRepository.findOne(id)
+  const deleteTransactionService = new DeleteTransactionService()
 
-  if (!transaction) {
-    const errorMessage = { error: 'Transaction not found' }
-    return response.status(400).json(errorMessage)
-  }
-
-  await transactionsRepository.remove(transaction)
+  await deleteTransactionService.execute(id)
 
   return response.status(204).send()
 })
