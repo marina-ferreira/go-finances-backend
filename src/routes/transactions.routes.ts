@@ -50,9 +50,13 @@ transactionsRouter.post(
 
     const { filename } = request.file
     const importTransactionsService = new ImportTransactionsService()
-    const transactions = await importTransactionsService.execute(filename)
 
-    return response.json(transactions)
+    try {
+      const transactions = await importTransactionsService.execute(filename)
+      return response.json(transactions)
+    } catch (error) {
+      return response.status(error.statusCode).json(error.message)
+    }
   }
 )
 
