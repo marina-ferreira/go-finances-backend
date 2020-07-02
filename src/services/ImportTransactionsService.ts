@@ -49,7 +49,7 @@ class ImportTransactionsService {
 
     await new Promise(resolve => parseCSV.on('end', resolve))
 
-    fs.unlink(csvFilePath, () => {})
+    fs.unlink(csvFilePath, () => ({}))
     return transactions
   }
 
@@ -73,8 +73,8 @@ class ImportTransactionsService {
 
   private getCategoryTitles(transactions: TransactionData[]): string[] {
     return transactions
-      .map(transaction => transaction.categoryTitle?.trim())
-      .filter(Boolean)
+      .filter(transaction => transaction.categoryTitle)
+      .map(transaction => transaction.categoryTitle?.trim() ?? '')
   }
 
   private buildTransaction({
@@ -87,13 +87,15 @@ class ImportTransactionsService {
     const category =
       categories.find(
         ({ title }: { title: string }) => title === categoryTitle
-      ) || categoryTitle
+      ) || (categoryTitle as string)
 
     return { ...transaction, category }
   }
 
   private validateTransaction(transaction: TransactionData): void {
-    const isValid = Object.keys(transaction).every(key => transaction[key])
+    const isValid = Object.keys(transaction).every(
+      key => transaction[key as keyof TransactionData]
+    )
     if (!isValid) throw new AppError('Missing transaction data', 422)
   }
 }
