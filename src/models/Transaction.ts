@@ -31,7 +31,7 @@ class Transaction {
     cascade: true
   })
   @JoinColumn({ name: 'category_id' })
-  category: Category
+  category: Category | string
 
   @CreateDateColumn()
   created_at: Date

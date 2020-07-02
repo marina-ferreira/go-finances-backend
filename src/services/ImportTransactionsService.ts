@@ -13,7 +13,7 @@ interface TransactionData {
   title: string
   type: 'income' | 'outcome'
   value: number
-  categoryTitle?: string
+  category?: Category | string
 }
 
 interface TransactionBuilder {
@@ -43,8 +43,8 @@ class ImportTransactionsService {
     const transactions: TransactionData[] = []
 
     parseCSV.on('data', line => {
-      const [title, type, value, categoryTitle] = line
-      transactions.push({ title, type, value, categoryTitle })
+      const [title, type, value, category] = line
+      transactions.push({ title, type, value, category })
     })
 
     await new Promise(resolve => parseCSV.on('end', resolve))
@@ -61,7 +61,7 @@ class ImportTransactionsService {
       categoryTitles
     )
 
-    const newTransactions: Transaction[] = this.transactionsRepository.create(
+    const newTransactions = this.transactionsRepository.create(
       transactions.map(transaction =>
         this.buildTransaction({ transaction, categories })
       )
@@ -73,8 +73,8 @@ class ImportTransactionsService {
 
   private getCategoryTitles(transactions: TransactionData[]): string[] {
     return transactions
-      .filter(transaction => transaction.categoryTitle)
-      .map(transaction => transaction.categoryTitle?.trim() ?? '')
+      .filter(({ category }) => category)
+      .map(({ category }) => (category as string)?.trim() ?? '')
   }
 
   private buildTransaction({
@@ -83,13 +83,12 @@ class ImportTransactionsService {
   }: TransactionBuilder): TransactionData {
     this.validateTransaction(transaction)
 
-    const { categoryTitle } = transaction
-    const category =
-      categories.find(
-        ({ title }: { title: string }) => title === categoryTitle
-      ) || (categoryTitle as string)
+    const { category } = transaction
+    const findCategory =
+      categories.find(({ title }: { title: string }) => title === category) ||
+      (category as string)
 
-    return { ...transaction, category }
+    return { ...transaction, category: findCategory }
   }
 
   private validateTransaction(transaction: TransactionData): void {

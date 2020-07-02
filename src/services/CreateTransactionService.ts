@@ -31,7 +31,9 @@ class CreateTransactionService {
   }
 
   private validateTransaction(params: Request): void {
-    const isValid = Object.keys(params).every(key => params[key])
+    const isValid = Object.keys(params).every(
+      key => params[key as keyof Request]
+    )
     if (!isValid) throw new AppError('Missing transaction data', 422)
   }
 }
