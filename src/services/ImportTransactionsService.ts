@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import csvParse from 'csv-parse'
-import { getRepository, getCustomRepository, Repository } from 'typeorm'
+import { getRepository, getCustomRepository, Repository, In } from 'typeorm'
 
 import TransactionsRepository from '../repositories/TransactionsRepository'
 import Transaction from '../models/Transaction'
@@ -12,8 +12,6 @@ interface Request {
 }
 
 class ImportTransactionsService {
-  private transactions: Transaction[] = []
-
   private transactionsRepository: TransactionsRepository = getCustomRepository(
     TransactionsRepository
   )
@@ -21,7 +19,8 @@ class ImportTransactionsService {
   private categoriesRepository: Repository<Category> = getRepository(Category)
 
   async execute({ filename }: Request): Promise<Transaction[]> {
-    return this.loadCsv(filename)
+    const transactions = await this.loadCsv(filename)
+    return this.createTransactions(transactions)
   }
 
   private async loadCsv(filename: string): Promise<Transaction[]> {
@@ -29,32 +28,40 @@ class ImportTransactionsService {
     const readCSVStream = fs.createReadStream(csvFilePath)
     const parseStream = csvParse({ from_line: 2, ltrim: true, rtrim: true })
     const parseCSV = readCSVStream.pipe(parseStream)
+    const transactions: Transaction[] = []
 
-    parseCSV.on('data', line => this.createTransaction(line))
+    parseCSV.on('data', line => {
+      const [title, type, value, category] = line
+      transactions.push({ title, type, value, category })
+    })
 
     await new Promise(resolve => parseCSV.on('end', resolve))
 
-    return this.transactions
+    return transactions
   }
 
-  private async createTransaction(
-    params: [string, 'income' | 'outcome', number, Category | string]
-  ): Promise<void> {
-    const [title, type, value, category] = params
-    const findCategory = await this.categoriesRepository.findOne({
-      where: { title: category }
+  private async createTransactions(transactions: Transaction[]) {
+    const categories = transactions
+      .map(transaction => transaction.category.trim())
+      .filter(String)
+
+    const findCategories = await this.categoriesRepository.find({
+      where: { title: In(categories) }
     })
 
-    const transaction: Transaction = this.transactionsRepository.create({
-      title,
-      value: Number(value),
-      type,
-      category: findCategory || { title: category as string }
-    })
+    const newTransactions: Transaction[] = this.transactionsRepository.create(
+      transactions.map(({ title, type, value, category }) => ({
+        title,
+        type,
+        value,
+        category: findCategories.find(
+          ({ title: categoryTitle }) => categoryTitle === String(category)
+        ) || { title: String(category) }
+      }))
+    )
 
-    console.log(transaction)
-    this.transactions.push(transaction)
-    await this.transactionsRepository.save(transaction)
+    await this.transactionsRepository.save(newTransactions)
+    return newTransactions
   }
 }
 
