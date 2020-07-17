@@ -18,7 +18,7 @@ class Category {
   title: string
 
   @OneToMany(() => Transaction, transaction => transaction.category)
-  transactions: Transaction[]
+  transaction: Transaction
 
   @CreateDateColumn()
   created_at: Date
