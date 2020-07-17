@@ -32,7 +32,8 @@ class ImportTransactionsService {
 
   async execute(filename: string): Promise<Transaction[]> {
     const transactions = await this.loadCsv(filename)
-    return this.createTransactions(transactions)
+    const categories = await this.createCategories(transactions)
+    return this.createTransactions(transactions, categories)
   }
 
   private async loadCsv(filename: string): Promise<TransactionData[]> {
@@ -53,49 +54,48 @@ class ImportTransactionsService {
     return transactions
   }
 
-  private async createTransactions(
+  private async createCategories(
     transactions: TransactionData[]
-  ): Promise<Transaction[]> {
+  ): Promise<Category[]> {
     const categoryTitles = this.getCategoryTitles(transactions)
     const categories = await this.categoriesRepository.findByTitles(
       categoryTitles
     )
 
-    const newTransactions = this.transactionsRepository.create(
-      transactions.map(transaction =>
-        this.buildTransaction({ transaction, categories })
+    const foundCategoryTitles = categories.map(({ title }) => title)
+    const newCategoriesTitles = categoryTitles
+      .filter(title => !foundCategoryTitles.includes(title))
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .map(title => ({ title }))
+
+    const newCategories = this.categoriesRepository.create(newCategoriesTitles)
+    await this.categoriesRepository.save(newCategories)
+
+    return [...categories, ...newCategories]
+  }
+
+  private async createTransactions(
+    transactions: TransactionData[],
+    categories: Category[]
+  ): Promise<Transaction[]> {
+    const transactionsData = transactions.map(transaction => {
+      const category = categories.find(
+        ({ title }) => title === transaction.category
       )
-    )
+
+      return { ...transaction, category }
+    })
+    const newTransactions = this.transactionsRepository.create(transactionsData)
 
     await this.transactionsRepository.save(newTransactions)
+
     return newTransactions
   }
 
   private getCategoryTitles(transactions: TransactionData[]): string[] {
-    return transactions
-      .filter(({ category }) => category)
-      .map(({ category }) => (category as string)?.trim() ?? '')
-  }
-
-  private buildTransaction({
-    transaction,
-    categories
-  }: TransactionBuilder): TransactionData {
-    this.validateTransaction(transaction)
-
-    const { category } = transaction
-    const findCategory =
-      categories.find(({ title }: { title: string }) => title === category) ||
-      (category as string)
-
-    return { ...transaction, category: findCategory }
-  }
-
-  private validateTransaction(transaction: TransactionData): void {
-    const isValid = Object.keys(transaction).every(
-      key => transaction[key as keyof TransactionData]
+    return transactions.map(
+      ({ category }) => (category as string)?.trim() ?? ''
     )
-    if (!isValid) throw new AppError('Missing transaction data', 422)
   }
 }
 

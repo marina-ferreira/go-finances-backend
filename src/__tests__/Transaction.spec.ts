@@ -33,7 +33,7 @@ describe('Transaction', () => {
     await mainConnection.close()
   })
 
-  xit('should be able to list transactions', async () => {
+  it('should be able to list transactions', async () => {
     await request(app).post('/transactions').send({
       title: 'March Salary',
       type: 'income',
@@ -65,7 +65,7 @@ describe('Transaction', () => {
     })
   })
 
-  xit('should be able to create new transaction', async () => {
+  it('should be able to create new transaction', async () => {
     const transactionsRepository = getRepository(Transaction)
 
     const response = await request(app).post('/transactions').send({
@@ -90,7 +90,7 @@ describe('Transaction', () => {
     )
   })
 
-  xit('should create tags when inserting new transactions', async () => {
+  it('should create tags when inserting new transactions', async () => {
     const transactionsRepository = getRepository(Transaction)
     const categoriesRepository = getRepository(Category)
 
@@ -125,7 +125,7 @@ describe('Transaction', () => {
     )
   })
 
-  xit('should not create tags when they already exists', async () => {
+  it('should not create tags when they already exists', async () => {
     const transactionsRepository = getRepository(Transaction)
     const categoriesRepository = getRepository(Category)
 
@@ -179,7 +179,7 @@ describe('Transaction', () => {
     )
   })
 
-  xit('should be able to delete a transaction', async () => {
+  it('should be able to delete a transaction', async () => {
     const transactionsRepository = getRepository(Transaction)
 
     const response = await request(app).post('/transactions').send({
@@ -196,7 +196,7 @@ describe('Transaction', () => {
     expect(transaction).toBeFalsy()
   })
 
-  xit('should be able to import transactions', async () => {
+  it('should be able to import transactions', async () => {
     const transactionsRepository = getRepository(Transaction)
     const categoriesRepository = getRepository(Category)
 
